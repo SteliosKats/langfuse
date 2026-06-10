@@ -279,10 +279,18 @@ const BlobStorageIntegrationSettingsForm = ({
       exportStartDate: state?.exportStartDate || null,
       exportSource: isPostCutoffCloud
         ? AnalyticsIntegrationExportSource.EVENTS
-        : state?.exportSource ||
-          (eventsExportAvailable
-            ? AnalyticsIntegrationExportSource.EVENTS
-            : AnalyticsIntegrationExportSource.TRACES_OBSERVATIONS),
+        : (() => {
+            const persisted = state?.exportSource;
+            const isEnriched =
+              persisted === AnalyticsIntegrationExportSource.EVENTS ||
+              persisted ===
+                AnalyticsIntegrationExportSource.TRACES_OBSERVATIONS_EVENTS;
+            if (persisted && (!isEnriched || eventsExportAvailable))
+              return persisted;
+            return eventsExportAvailable
+              ? AnalyticsIntegrationExportSource.EVENTS
+              : AnalyticsIntegrationExportSource.TRACES_OBSERVATIONS;
+          })(),
       exportFieldGroups:
         (state?.exportFieldGroups as ObservationFieldGroupFull[]) ?? [
           ...OBSERVATION_FIELD_GROUPS_FULL,
@@ -314,10 +322,18 @@ const BlobStorageIntegrationSettingsForm = ({
       exportStartDate: state?.exportStartDate || null,
       exportSource: isPostCutoffCloud
         ? AnalyticsIntegrationExportSource.EVENTS
-        : state?.exportSource ||
-          (eventsExportAvailable
-            ? AnalyticsIntegrationExportSource.EVENTS
-            : AnalyticsIntegrationExportSource.TRACES_OBSERVATIONS),
+        : (() => {
+            const persisted = state?.exportSource;
+            const isEnriched =
+              persisted === AnalyticsIntegrationExportSource.EVENTS ||
+              persisted ===
+                AnalyticsIntegrationExportSource.TRACES_OBSERVATIONS_EVENTS;
+            if (persisted && (!isEnriched || eventsExportAvailable))
+              return persisted;
+            return eventsExportAvailable
+              ? AnalyticsIntegrationExportSource.EVENTS
+              : AnalyticsIntegrationExportSource.TRACES_OBSERVATIONS;
+          })(),
       exportFieldGroups:
         (state?.exportFieldGroups as ObservationFieldGroupFull[]) ?? [
           ...OBSERVATION_FIELD_GROUPS_FULL,
