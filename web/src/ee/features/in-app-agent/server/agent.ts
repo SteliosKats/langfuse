@@ -3,11 +3,14 @@ import { MastraAgent } from "@ag-ui/mastra";
 import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { Agent } from "@mastra/core/agent";
+import { createTool } from "@mastra/core/tools";
 import { MCPClient } from "@mastra/mcp";
 
-import type {
-  AgUiEvent,
-  AgUiRunAgentInput,
+import {
+  type AgUiEvent,
+  type AgUiRunAgentInput,
+  IN_APP_AGENT_REDIRECT_TOOL_NAME,
+  InAppAgentRedirectToolInputSchema,
 } from "@/src/ee/features/in-app-agent/schema";
 import type { InAppAgentTracingConfig } from "@/src/ee/features/in-app-agent/server/instrumentation";
 import { createInAppAgentInstrumentation } from "@/src/ee/features/in-app-agent/server/instrumentation";
@@ -31,6 +34,14 @@ Always provide a complete answer to the user's question in your response, do not
 If a tool call fails but you intend on re-trying it, do not mention the failure and just retry the tool call.
 If you cannot provide an answer to the user, spare the user the details of failed tool calls and instead summarize the issue.
 </behavioral_rules>
+
+<user_navigation>
+When a relevant Langfuse page would help the user, answer the question normally and call ${IN_APP_AGENT_REDIRECT_TOOL_NAME} to propose opening that page.
+The tool call should be the last thing in your response before ending your turn, and should not be mentioned in the text of your response.
+Use the redirect proposal only for known in-app destinations from the tool schema. Never invent URLs or ask the user to paste links.
+When the user asks for a trace view with specific state, use the typed trace params for time ranges, search, filters, and ordering instead of describing URL query parameters.
+Use a short action label, for example "Open members" or "Open traces".
+</user_navigation>
 
 <style_rules>
 Be concise, factual, and useful.
@@ -529,6 +540,21 @@ async function createMastraAdapter(params: {
     const tools = {
       ...prefixToolsetTools("langfuse", toolsets.langfuse),
       ...prefixToolsetTools("langfuseDocs", toolsets.langfuseDocs),
+      [IN_APP_AGENT_REDIRECT_TOOL_NAME]: createTool({
+        id: IN_APP_AGENT_REDIRECT_TOOL_NAME,
+        description:
+          "Propose a user-confirmed navigation action to a known Langfuse page. This does not navigate automatically.",
+        inputSchema: InAppAgentRedirectToolInputSchema,
+        execute: async (input) => {
+          const { destination } =
+            InAppAgentRedirectToolInputSchema.parse(input);
+
+          return {
+            status: "proposal_created" as const,
+            destination,
+          };
+        },
+      }),
     };
 
     const agent = new Agent({

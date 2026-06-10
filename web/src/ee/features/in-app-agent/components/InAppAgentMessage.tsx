@@ -1,7 +1,9 @@
 "use client";
 
-import { Loader2, Wrench } from "lucide-react";
+import { ArrowRight, Loader2, Wrench } from "lucide-react";
+import { useRouter } from "next/router";
 import { Streamdown } from "streamdown";
+import { Button } from "@/src/components/ui/button";
 import { getSafeLinkUrl } from "@/src/components/ui/safe-url";
 import { cn } from "@/src/utils/tailwind";
 import { useMemo } from "react";
@@ -11,6 +13,7 @@ export type InAppAgentMessageRole = "assistant" | "user";
 export type InAppAgentMessageContent =
   | { type: "loading"; label?: string }
   | { type: "text"; text: string }
+  | { type: "redirectAction"; label: string; href: string }
   | {
       type: "toolGroup";
       tools: InAppAgentToolCallContent[];
@@ -37,6 +40,10 @@ export function InAppAgentMessage({
   isCompact = false,
 }: InAppAgentMessageProps) {
   const isUser = role === "user";
+
+  if (content.type === "redirectAction") {
+    return <RedirectAction content={content} isCompact={isCompact} />;
+  }
 
   if (content.type === "toolGroup") {
     return (
@@ -75,6 +82,31 @@ export function InAppAgentMessage({
         <MessageText role={role} text={content.text} isCompact={isCompact} />
       )}
     </div>
+  );
+}
+
+function RedirectAction({
+  content,
+  isCompact,
+}: {
+  content: Extract<InAppAgentMessageContent, { type: "redirectAction" }>;
+  isCompact: boolean;
+}) {
+  const router = useRouter();
+
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant="secondary"
+      className={cn("shrink-0", isCompact ? "h-6 px-2 text-xs" : "h-7")}
+      onClick={() => {
+        router.push(content.href).catch(() => undefined);
+      }}
+    >
+      {content.label}
+      <ArrowRight className="ml-1 size-3" />
+    </Button>
   );
 }
 

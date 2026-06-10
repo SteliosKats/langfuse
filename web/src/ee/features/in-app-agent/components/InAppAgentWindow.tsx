@@ -280,14 +280,16 @@ export function InAppAgentWindow(props: InAppAgentWindowProps) {
 
             <ol className="flex w-full flex-col gap-3 pb-4">
               {messages.map((message) => {
-                const hasToolContent = message.content.type === "toolGroup";
+                const hasFullWidthContent =
+                  message.content.type === "toolGroup" ||
+                  message.content.type === "redirectAction";
 
                 return (
                   <li
                     key={message.id}
                     className={cn(
                       "max-w-[92%]",
-                      hasToolContent ? "w-full" : "w-fit",
+                      hasFullWidthContent ? "w-full" : "w-fit",
                       message.role === "user" && "ml-auto",
                     )}
                   >
