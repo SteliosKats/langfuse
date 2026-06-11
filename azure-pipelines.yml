@@ -1,0 +1,32 @@
+trigger:
+- v3.184.0
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- checkout: self
+
+# Enable buildx
+- script: |
+    docker buildx create --use --name mybuilder || true
+    docker buildx inspect --bootstrap
+  displayName: "Setup Docker buildx"
+
+# Login to ACR (required for --push)
+- task: Docker@2
+  inputs:
+    containerRegistry: 'EurolifeAKSProdRegistry-AKS_Charts'
+    command: 'login'
+  displayName: "Login to ACR"
+
+# Build + push using buildx (your exact command)
+- script: |
+    docker buildx build \
+      --platform linux/amd64 \
+      --push \
+      -t eurolifeakprodregistry.azurecr.io/langfuse-web:v3.184.0 \
+      --build-arg NEXT_PUBLIC_BASE_PATH=/trace \
+      -f ./web/Dockerfile \
+      .
+  displayName: "Build and Push with buildx"
