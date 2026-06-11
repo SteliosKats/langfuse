@@ -25,7 +25,7 @@ steps:
     docker buildx build \
       --platform linux/amd64 \
       --push \
-      -t eurolifeakstestregistry.azurecr.io/langfuse-web:v3.184.0 \
+      -t eurolifeakprodregistry.azurecr.io/langfuse-web:v3.184.0 \
       --build-arg NEXT_PUBLIC_BASE_PATH=/trace \
       -f ./web/Dockerfile \
       .
